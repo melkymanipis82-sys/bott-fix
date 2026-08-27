@@ -14,9 +14,9 @@ English-only version for Render. The service runs the Telegram bot and the stati
 - `/start`
 - `/help`
 - `/myid`
-- `/add` or `/them`
-- `/list` or `/danhsach`
-- `/remove <uid>` or `/xoa <uid>`
+- `/add` or `/add`
+- `/list` or `/list`
+- `/remove <uid>` or `/remove <uid>`
 - `/grant <user_id> [user|admin]`
 - `/revoke <user_id>`
 - `/who`
@@ -37,3 +37,7 @@ The previous `guard()` implementation declared `_decorator` with `async def`. Th
 `TypeError: 'coroutine' object is not callable`
 
 The fixed version uses a normal synchronous decorator around the async callback.
+
+
+## Security note
+The bot token is configured in the deployment code for this build. Do not publish this repository publicly. If the token has been exposed, revoke it with BotFather and replace it with a new token.
