@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>FBWatchBot // UID Monitor</title>
+  <style>
+    :root{--bg:#050807;--panel:#0a100d;--line:#173322;--text:#b9f7c7;--muted:#6da47b;--accent:#39ff88;--danger:#ff4d67}
+    *{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at 20% 0%,#0b1d13 0,#050807 42%,#020403 100%);color:var(--text);font:15px/1.5 ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;min-height:100vh}
+    .scan{position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(57,255,136,.025) 0,rgba(57,255,136,.025) 1px,transparent 1px,transparent 4px);mix-blend-mode:screen}
+    header{padding:28px 18px 18px;border-bottom:1px solid var(--line);text-align:center}.logo{font-size:26px;font-weight:800;color:var(--accent);text-shadow:0 0 14px rgba(57,255,136,.5)}
+    main{max-width:1050px;margin:0 auto;padding:22px 16px 50px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:760px){.grid{grid-template-columns:1fr}}
+    .panel{border:1px solid var(--line);background:rgba(8,16,11,.88);box-shadow:0 0 30px rgba(0,0,0,.35);padding:18px;border-radius:10px}.title{color:var(--accent);margin:0 0 12px;font-size:14px;letter-spacing:.08em}.row{display:flex;gap:8px}.row input{flex:1;min-width:0;background:#030604;color:var(--text);border:1px solid #20462e;padding:12px;border-radius:6px;font:inherit}.btn{border:1px solid #2c8d4b;background:#092313;color:var(--accent);padding:12px 16px;border-radius:6px;font:inherit;cursor:pointer}.btn:hover{box-shadow:0 0 15px rgba(57,255,136,.2)}
+    .result{margin-top:14px;border-left:3px solid var(--accent);padding:12px;background:#061009;min-height:48px}.live{color:var(--accent)}.die{color:var(--danger)}.muted{color:var(--muted)}
+    table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:left}th{color:var(--muted)}a{color:var(--accent)}.stat{display:inline-block;padding:2px 7px;border:1px solid currentColor;border-radius:999px}.footer{margin-top:16px;color:#4e7659;font-size:12px;text-align:center}
+  </style>
+</head>
+<body>
+<div class="scan"></div>
+<header><div class="logo">[ FBWATCHBOT // UID MONITOR ]</div><div class="muted">Telegram + Web service</div></header>
+<main>
+  <div class="grid">
+    <section class="panel">
+      <h2 class="title">&gt; CHECK_UID</h2>
+      <div class="row"><input id="uid" placeholder="UID or Facebook URL" autocomplete="off"><button class="btn" onclick="checkUid()">CHECK</button></div>
+      <div id="result" class="result muted">Waiting for input...</div>
+    </section>
+    <section class="panel">
+      <h2 class="title">&gt; SYSTEM_STATUS</h2>
+      <div id="health" class="muted">Checking service...</div>
+      <div style="margin-top:10px" id="count">Tracked UIDs: --</div>
+    </section>
+  </div>
+  <section class="panel" style="margin-top:16px">
+    <h2 class="title">&gt; TRACKED_UIDS</h2>
+    <div style="overflow:auto"><table><thead><tr><th>UID</th><th>Name</th><th>Status</th><th>Link</th></tr></thead><tbody id="uids"><tr><td colspan="4" class="muted">Loading...</td></tr></tbody></table></div>
+  </section>
+  <div class="footer">Auto-refresh: 15s // English interface // API: /api/check?uid=...</div>
+</main>
+<script>
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function checkUid(){const v=document.getElementById('uid').value.trim();const r=document.getElementById('result');if(!v){r.textContent='Enter a UID or Facebook URL.';return}r.textContent='Checking...';try{const d=await fetch('/api/check?uid='+encodeURIComponent(v)).then(x=>x.json());if(d.error){r.innerHTML='<span class="die">ERROR:</span> '+esc(d.error);return}const cls=d.status==='LIVE'?'live':d.status==='DIE'?'die':'muted';r.innerHTML='<b>UID:</b> '+esc(d.uid)+'<br><b>NAME:</b> '+esc(d.name||'Unknown')+'<br><b>STATUS:</b> <span class="'+cls+'">'+esc(d.status)+'</span><br><span class="muted">Checked: '+esc(d.checked_at)+'</span>'}catch(e){r.textContent='Request failed: '+e}}
+async function load(){try{const h=await fetch('/healthz').then(x=>x.json());document.getElementById('health').innerHTML='<span class="live">ONLINE</span> // '+esc(h.service)}catch(e){document.getElementById('health').innerHTML='<span class="die">OFFLINE</span>'}try{const d=await fetch('/api/uids').then(x=>x.json());document.getElementById('count').textContent='Tracked UIDs: '+d.count;document.getElementById('uids').innerHTML=d.uids.length?d.uids.map(x=>{const c=x.status==='LIVE'?'live':x.status==='DIE'?'die':'muted';return '<tr><td>'+esc(x.uid)+'</td><td>'+esc(x.name||'Unknown')+'</td><td><span class="stat '+c+'">'+esc(x.status)+'</span></td><td><a target="_blank" rel="noopener" href="'+esc(x.url)+'">OPEN</a></td></tr>'}).join(''):'<tr><td colspan="4" class="muted">No tracked UIDs.</td></tr>'}catch(e){document.getElementById('uids').innerHTML='<tr><td colspan="4" class="die">Failed to load data.</td></tr>'}}
+load();setInterval(load,15000);document.getElementById('uid').addEventListener('keydown',e=>{if(e.key==='Enter')checkUid()});
+</script>
+</body>
+  </html>
+  
