@@ -1,0 +1,13 @@
+# Do not commit sensitive configuration files
+.env
+
+# Do not commit the local database
+*.db
+*.sqlite
+*.sqlite3
+
+# Python cache
+__pycache__/
+*.py[cod]
+.venv/
+venv/

@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: fbwatchbot
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python tele_fb_monitor.py
+    autoDeploy: true
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: OWNER_IDS
+        sync: false
+      - key: USER_IDS
+        sync: false
+      - key: CHECK_INTERVAL_SEC
+        value: "300"
