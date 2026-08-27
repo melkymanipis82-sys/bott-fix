@@ -262,3 +262,4 @@ def callbacks(call):
 if __name__ == "__main__":
     print("FBWatchBot legacy implementation is running...")
     bot.infinity_polling(skip_pending=True, timeout=60)
+        
